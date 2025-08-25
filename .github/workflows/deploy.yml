@@ -1,0 +1,36 @@
+name: Deploy Website
+on:
+  push:
+    branches: [ "main" ]
+
+concurrency:
+  group: deploy-website
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Pull your repository
+      - uses: actions/checkout@v3
+
+      # 2. Use Node 20.19.0 and enable npm caching
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20.19.0
+          cache: 'npm'
+
+      # 3. Optional: Use a faster npm mirror to avoid rate limits
+      # - run: npm config set registry https://registry.npmmirror.com
+
+      # 4. Install dependencies using cache and offline preference
+      - run: npm ci --prefer-offline --no-audit --no-fund
+
+      # 5. Build the site
+      - run: npm run build
+
+      # 6. Deploy to GitHub Pages
+      - uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
